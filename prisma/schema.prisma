@@ -1,0 +1,150 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String      @id @default(cuid())
+  createdAt DateTime    @default(now()) @map("created_at")
+  updateAt  DateTime    @updatedAt @map("updated_at")
+  email     String      @unique
+  password  String
+  name      String?
+  role      Role        @default(USER)
+  posts     Post[]
+  Category  Category[]
+  Banner    Banner[]
+  Media     Media[]
+  Providers Providers[]
+}
+
+model Post {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  active    Boolean  @default(false)
+  title     String   @db.VarChar(255)
+  slug      String
+  author    User?    @relation(fields: [authorId], references: [id])
+  authorId  String?
+  content   String
+  thumbnail Media[]
+  capital   String
+  limit     String
+  age       String
+  score     Score    @default(FIVE)
+  users     Int
+}
+
+model Providers {
+  id           String     @id @default(cuid())
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  active       Boolean    @default(false)
+  title        String     @db.VarChar(255)
+  slug         String     @unique
+  welcomeOffer String?
+  location     String?
+  author       User?      @relation(fields: [authorId], references: [id])
+  authorId     String?
+  content      String
+  thumbnail    Media?
+  // logo      Media[]
+  categories   Category[]
+  capital      String?
+  limit        String?
+  age          String?
+  score        Score      @default(FIVE)
+  users        Int?
+}
+
+model Category {
+  id               String      @id @default(cuid())
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+  active           Boolean     @default(false)
+  title            String      @db.VarChar(255)
+  slug             String      @unique
+  author           User?       @relation(fields: [authorId], references: [id])
+  authorId         String?
+  media            Media?      @relation(fields: [mediaId], references: [id])
+  mediaId          String?
+  parentCategory   Category?   @relation("ChildCategories", fields: [parentCategoryId], references: [id])
+  parentCategoryId String?
+  childCategories  Category[]  @relation("ChildCategories")
+  providers        Providers[]
+}
+
+// model Company {
+//   id        String   @id @default(cuid())
+//   createdAt DateTime @default(now())
+//   updatedAt DateTime @updatedAt
+//   active    Boolean  @default(false)
+//   name      String
+// }
+
+model Banner {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  active    Boolean  @default(false)
+  title     String   @db.VarChar(255)
+  author    User?    @relation(fields: [authorId], references: [id])
+  authorId  String?
+  media     Media    @relation(fields: [mediaId], references: [id])
+  mediaId   String
+}
+
+model Media {
+  id               String          @id @default(cuid())
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  active           Boolean         @default(false)
+  title            String          @db.VarChar(255)
+  author           User?           @relation(fields: [authorId], references: [id])
+  authorId         String?
+  Post             Post?           @relation(fields: [postId], references: [id])
+  postId           String?
+  Banner           Banner[]
+  Category         Category[]
+  paymentMethodsId String?
+  PaymentMethods   PaymentMethods?
+  Providers        Providers?      @relation(fields: [providersId], references: [id])
+  providersId      String?         @unique
+}
+
+model PaymentMethods {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  active    Boolean  @default(false)
+  name      String
+  logo      Media    @relation(fields: [mediaId], references: [id])
+  mediaId   String   @unique
+}
+
+enum Role {
+  USER
+  ADMIN
+  OWNER
+  MANAGER
+  CONTENT_EDITOR
+}
+
+enum Score {
+  ONE   @map("1")
+  TWO   @map("2")
+  THREE @map("3")
+  FOUR  @map("4")
+  FIVE  @map("5")
+}
